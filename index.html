@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>5 "ж" класс — Главная</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --text: #000;
+      --card: #fff;
+      --button: #3498db;
+      --button-hover: #2980b9;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #eee;
+      --card: #1e1e1e;
+      --button: #5555ff;
+      --button-hover: #4444dd;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      font-size: 16px;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+      background-color: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--text);
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 16px;
+      color: #fff;
+      background-color: var(--button);
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: var(--button-hover);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: var(--button);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .theme-toggle:hover {
+      background-color: var(--button-hover);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      margin: 40px 0;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px 10px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+
+  <div class="container">
+    <h1>Это сайт 5 "ж" класса, школы №25</h1>
+    <a href="page2.html" class="btn">Перейти на страницу новостей</a>
+    <p>Добро пожаловать! Здесь вы найдёте последние новости и события нашего класса.</p>
+  </div>
+
+  <footer>
+    &copy; 2025 5 "ж" класс, школа №25
+  </footer>
+
+  <script>
+    const toggleButton = document.getElementById("themeToggle");
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      localStorage.setItem("darkMode", isDark);
+      toggleButton.textContent = isDark ? "☀️" : "🌙";
+    }
+
+    window.onload = () => {
+      const isDark = localStorage.getItem("darkMode") === "true";
+      if (isDark) document.body.classList.add("dark");
+      toggleButton.textContent = isDark ? "☀️" : "🌙";
+    };
+  </script>
+</body>
+</html>
