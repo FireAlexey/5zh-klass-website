@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>5 "ж" класс — Главная</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>5 "Ж" класс — Главная</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
       --bg: #f0f4f8;
@@ -23,7 +23,6 @@
 
     body {
       font-family: "Segoe UI", sans-serif;
-      font-size: 16px;
       background-color: var(--bg);
       color: var(--text);
       margin: 0;
@@ -47,7 +46,7 @@
 
     .btn {
       display: inline-block;
-      margin-top: 20px;
+      margin-top: 15px;
       padding: 12px 24px;
       font-size: 16px;
       color: #fff;
@@ -63,13 +62,23 @@
       background-color: var(--button-hover);
     }
 
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
     .theme-toggle {
       position: fixed;
       top: 20px;
       left: 20px;
       background: var(--button);
       color: white;
-      border: none;
+      border: 2px solid var(--button-hover);
       border-radius: 6px;
       padding: 8px 12px;
       font-size: 16px;
@@ -81,11 +90,14 @@
       background-color: var(--button-hover);
     }
 
-    footer {
+    #authSection {
+      margin-top: 20px;
+    }
+
+    #welcome {
       text-align: center;
-      font-size: 14px;
-      color: #888;
-      margin: 40px 0;
+      margin-top: 20px;
+      font-weight: bold;
     }
 
     @media (max-width: 600px) {
@@ -100,18 +112,95 @@
   <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
 
   <div class="container">
-    <h1>Это сайт 5 "ж" класса, школы №25</h1>
-    <a href="page2.html" class="btn">Перейти на страницу новостей</a>
-    <p>Добро пожаловать! Здесь вы найдёте последние новости и события нашего класса.</p>
+    <h1>Сайт 5 "Ж" класса</h1>
+
+    <div id="authSection">
+      <input type="text" id="nickname" placeholder="Никнейм">
+      <input type="password" id="password" placeholder="Пароль">
+      <button class="btn" id="registerBtn">Регистрация</button>
+      <button class="btn" id="loginBtn">Вход</button>
+    </div>
+
+    <div id="welcome" style="display:none;">
+      Добро пожаловать, <span id="userNick"></span>!
+      <br>
+      <a href="chat.html" class="btn">Перейти в чат</a>
+      <a href="news.html" class="btn">Новости класса</a>
+      <br>
+      <button class="btn" id="logoutBtn" style="margin-top:10px;">Выйти</button>
+    </div>
   </div>
 
-  <footer>
-    &copy; 2025 5 "ж" класс, школа №25
-  </footer>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
   <script>
-    const toggleButton = document.getElementById("themeToggle");
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
+      authDomain: "klass-fda45.firebaseapp.com",
+      databaseURL: "https://klass-fda45-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "klass-fda45",
+      storageBucket: "klass-fda45.appspot.com",
+      messagingSenderId: "1063291699872",
+      appId: "1:1063291699872:web:e01c9c9a984b3d63733fc5"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const registerBtn = document.getElementById("registerBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    registerBtn.onclick = register;
+    loginBtn.onclick = login;
+    logoutBtn.onclick = logout;
+
+    async function register() {
+      const nickname = document.getElementById("nickname").value;
+      const password = document.getElementById("password").value;
+      if (!nickname || !password) return alert("Введите ник и пароль");
+      try {
+        const user = await auth.createUserWithEmailAndPassword(nickname + "@chat.local", password);
+        await db.ref("users/" + user.user.uid).set({ nickname });
+        alert("Регистрация прошла успешно!");
+      } catch (error) {
+        alert("Ошибка регистрации: " + error.message);
+      }
+    }
+
+    async function login() {
+      const nickname = document.getElementById("nickname").value;
+      const password = document.getElementById("password").value;
+      if (!nickname || !password) return alert("Введите ник и пароль");
+      try {
+        await auth.signInWithEmailAndPassword(nickname + "@chat.local", password);
+      } catch (error) {
+        alert("Ошибка входа: " + error.message);
+      }
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const snap = await db.ref("users/" + user.uid).once("value");
+        const nickname = snap.val()?.nickname || "Аноним";
+        document.getElementById("userNick").textContent = nickname;
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("welcome").style.display = "block";
+      } else {
+        document.getElementById("authSection").style.display = "block";
+        document.getElementById("welcome").style.display = "none";
+      }
+    });
+
+    const toggleButton = document.getElementById("themeToggle");
     function toggleTheme() {
       document.body.classList.toggle("dark");
       const isDark = document.body.classList.contains("dark");

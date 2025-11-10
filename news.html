@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Новости 5 "ж" класса</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --text: #000;
+      --card: #fff;
+      --button: #3498db;
+      --button-hover: #2980b9;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #eee;
+      --card: #1e1e1e;
+      --button: #5555ff;
+      --button-hover: #4444dd;
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 60px auto;
+      background-color: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .news {
+      margin-top: 20px;
+    }
+
+    .news-item {
+      background: var(--bg);
+      border: 1px solid #ccc;
+      padding: 16px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+
+    .news-item img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .btn, .theme-toggle {
+      display: inline-block;
+      padding: 10px 16px;
+      font-size: 16px;
+      color: #fff;
+      background-color: var(--button);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover, .theme-toggle:hover {
+      background-color: var(--button-hover);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+    }
+
+    .admin-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+
+    .overlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .popup {
+      background-color: var(--card);
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .popup h2 { margin-top:0; }
+
+    .popup input, .popup textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .popup button { margin-top:10px; }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--button);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .container { margin:20px 10px; padding:20px; }
+    }
+  </style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+  <button class="btn admin-btn" id="adminBtn" style="display:none;" onclick="showPublish()">Добавить новость</button>
+
+  <div class="container">
+    <h1>Новости 5 "ж" класса</h1>
+    <a href="index.html" class="btn" style="background:none;color:var(--button);border:none;">← На главную</a>
+    <div class="news" id="newsList"></div>
+  </div>
+
+  <!-- Публикация -->
+  <div class="overlay" id="publishOverlay">
+    <div class="popup">
+      <button class="close-btn" onclick="hidePublish()">×</button>
+      <h2>Новая новость</h2>
+      <input type="text" id="newsText" placeholder="Текст новости">
+      <input type="file" id="imageFile" accept="image/*,video/gif">
+      <button class="btn" onclick="publishNews()">Опубликовать</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
+      authDomain: "klass-fda45.firebaseapp.com",
+      databaseURL: "https://klass-fda45-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "klass-fda45",
+      storageBucket: "klass-fda45.appspot.com",
+      messagingSenderId: "1063291699872",
+      appId: "1:1063291699872:web:e01c9c9a984b3d63733fc5",
+      measurementId: "G-VBYZLXZ4BW"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const newsListDiv = document.getElementById("newsList");
+    const adminBtn = document.getElementById("adminBtn");
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+      document.getElementById("themeToggle").textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+    }
+
+    window.onload = () => {
+      const isDark = localStorage.getItem("darkMode") === "true";
+      if(isDark) document.body.classList.add("dark");
+      document.getElementById("themeToggle").textContent = isDark ? "☀️" : "🌙";
+
+      auth.onAuthStateChanged(user => {
+        if(user) {
+          if(user.uid === "GwfM0H0vkgOJdpbrbJHjkrFUC0k2") adminBtn.style.display = "block";
+        }
+        loadNews();
+      });
+    };
+
+    function showPublish(){ document.getElementById("publishOverlay").style.display="flex"; }
+    function hidePublish(){ document.getElementById("publishOverlay").style.display="none"; }
+
+    function publishNews() {
+      const text = document.getElementById("newsText").value.trim();
+      const fileInput = document.getElementById("imageFile");
+      if(!text) return alert("Введите текст новости");
+
+      if(fileInput.files.length > 0){
+        const reader = new FileReader();
+        reader.onload = e => saveNews(text,e.target.result);
+        reader.readAsDataURL(fileInput.files[0]);
+        fileInput.value = ""; // убираем лишние файлы
+      } else {
+        saveNews(text,"");
+      }
+    }
+
+    function saveNews(text,image){
+      db.ref("news").push({
+        text,text,image:image||"",date:new Date().toLocaleString()
+      });
+      hidePublish();
+    }
+
+    function loadNews(){
+      newsListDiv.innerHTML = "";
+      db.ref("news").on("child_added", snapshot=>{
+        const n = snapshot.val();
+        const div = document.createElement("div");
+        div.className = "news-item";
+        div.innerHTML = `<strong>${n.date}</strong><p>${n.text}</p>${n.image?`<img src="${n.image}">`:""}`;
+        newsListDiv.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>

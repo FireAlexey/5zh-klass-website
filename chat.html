@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Чат 5 "Ж" класса</title>
+  <style>
+    :root {
+  --bg: #f0f0f0;
+  --text: #000;
+  --card: #fff;
+  --button: #3498db;
+  --button-hover: #2d85c6;
+}
+
+body.dark {
+  --bg: #1e1e1e;
+  --text: #f0f0f0;
+  --card: #2c2c2c;
+  --button: #5555ff;      /* тёмно-синий как на главном */
+  --button-hover: #4444dd; /* чуть темнее при наведении */
+}
+
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 15px;
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      transition: color 0.3s;
+    }
+
+    body.dark h2 {
+      color: var(--text);
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: var(--button);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    #messages {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    body.dark #messages {
+      background-color: #3a3a3a;
+    }
+
+    #logout {
+      background-color: #e74c3c;
+    }
+
+    #logout:hover {
+      background-color: #c0392b;
+    }
+
+    .top-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .top-link a {
+      color: var(--button);
+      text-decoration: none;
+    }
+
+    #themeToggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 24px;
+    }
+
+    @media (max-width: 650px) {
+      .container {
+        margin: 10px;
+        padding: 10px;
+      }
+      input, button {
+        font-size: 14px;
+      }
+      #messages {
+        max-height: 200px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle">☀️</button>
+  <div class="container">
+    <h2>Чат 5 "Ж" класса</h2>
+
+    <!-- Авторизация -->
+    <div id="authSection">
+      <input type="text" id="nickname" placeholder="Никнейм">
+      <input type="password" id="password" placeholder="Пароль">
+      <button id="registerBtn">Регистрация</button>
+      <p id="registerSuccess" style="color:green; display:none;">Регистрация прошла успешно! Теперь выполните вход.</p>
+      <button id="loginBtn">Вход</button>
+    </div>
+
+    <!-- Чат -->
+    <div id="chatSection" style="display:none;">
+      <div id="messages"></div>
+      <input type="file" id="imageInput" accept="image/*,image/gif">
+      <input type="text" id="messageInput" placeholder="Введите сообщение">
+      <button id="sendBtn">Отправить</button>
+      <button id="logout">Выход</button>
+    </div>
+
+    <div class="top-link">
+      <a href="index.html">← На главную</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
+  authDomain: "klass-fda45.firebaseapp.com",
+  databaseURL: "https://klass-fda45-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "klass-fda45",
+  storageBucket: "klass-fda45.appspot.com",
+  messagingSenderId: "1063291699872",
+  appId: "1:1063291699872:web:e01c9c9a984b3d63733fc5",
+  measurementId: "G-VBYZLXZ4BW"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+const authSection = document.getElementById('authSection');
+const chatSection = document.getElementById('chatSection');
+const messagesDiv = document.getElementById('messages');
+const messageInput = document.getElementById('messageInput');
+
+const registerBtn = document.getElementById('registerBtn');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logout');
+const sendBtn = document.getElementById('sendBtn');
+
+registerBtn.onclick = register;
+loginBtn.onclick = login;
+logoutBtn.onclick = logout;
+sendBtn.onclick = sendMessage;
+
+const themeToggle = document.getElementById('themeToggle');
+const adminUID = "GwfM0H0vkgOJdpbrbJHjkrFUC0k2"; // <- поставь UID админа, если нужно
+
+// Тема
+function setTheme(isDark) {
+  if(isDark) {
+    document.body.classList.add('dark');
+    themeToggle.textContent = '🌙';
+  } else {
+    document.body.classList.remove('dark');
+    themeToggle.textContent = '☀️';
+  }
+}
+
+themeToggle.onclick = () => {
+  const isDark = !document.body.classList.contains('dark');
+  setTheme(isDark);
+  localStorage.setItem('darkMode', isDark);
+};
+
+window.onload = () => {
+  const isDark = localStorage.getItem('darkMode') === 'true';
+  setTheme(isDark);
+};
+
+// Регистрация
+async function register() {
+  const nickname = document.getElementById('nickname').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if (!nickname || !password) return alert("Введите ник и пароль");
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(nickname + "@chat.local", password);
+    await db.ref('users/' + userCredential.user.uid).set({ nickname });
+    document.getElementById('registerSuccess').style.display = 'block';
+  } catch (error) {
+    alert("Ошибка регистрации: " + error.message);
+  }
+}
+
+// Вход
+async function login() {
+  const nickname = document.getElementById('nickname').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if (!nickname || !password) return alert("Введите ник и пароль");
+  try {
+    await auth.signInWithEmailAndPassword(nickname + "@chat.local", password);
+  } catch (error) {
+    alert("Ошибка входа: " + error.message);
+  }
+}
+
+// Выход
+function logout() {
+  auth.signOut();
+}
+
+async function sendMessage() {
+  const text = messageInput.value.trim();
+  const fileInput = document.getElementById('imageInput');
+  const file = fileInput.files[0];
+
+  if (!text && !file) return; // Не отправлять пустое сообщение
+
+  const user = auth.currentUser;
+  const snapshot = await db.ref('users/' + user.uid).once('value');
+  const nickname = snapshot.val()?.nickname || 'Аноним';
+
+  let imageUrl = null;
+
+  if (file) {
+    try {
+      const storageRef = firebase.storage().ref();
+      const fileRef = storageRef.child('chat_images/' + Date.now() + '_' + file.name);
+      await fileRef.put(file);
+      imageUrl = await fileRef.getDownloadURL();
+    } catch (err) {
+      alert('Ошибка загрузки файла: ' + err.message);
+      return;
+    }
+  }
+
+  await db.ref('messages').push({
+    user: nickname,
+    uid: user.uid,
+    text: text || '',
+    image: imageUrl || null,
+    timestamp: Date.now()
+  });
+
+  messageInput.value = '';
+  fileInput.value = '';
+}
+
+
+
+// Загрузка сообщений
+function loadMessages() {
+  messagesDiv.innerHTML = '';
+
+  // Новый message listener
+  db.ref('messages').on('child_added', snapshot => addMessage(snapshot));
+  db.ref('messages').on('child_changed', snapshot => updateMessage(snapshot));
+  db.ref('messages').on('child_removed', snapshot => removeMessage(snapshot));
+}
+
+// Добавление нового сообщения
+function addMessage(snapshot) {
+  const msg = snapshot.val();
+  const key = snapshot.key;
+  const div = document.createElement('div');
+  div.className = 'message-item';
+  div.dataset.key = key;
+  const time = new Date(msg.timestamp).toLocaleTimeString();
+
+  div.innerHTML = `<strong>[${time}] ${msg.user}:</strong> <span class="msg-text">${msg.text || ''}</span>`;
+
+  if (msg.image) {
+  const img = document.createElement('img');
+  img.src = msg.image;
+  img.className = 'message-img';
+  img.style.maxWidth = '200px';
+  img.style.display = 'block';
+  img.style.marginTop = '5px';
+  div.appendChild(img);
+}
+
+
+  const user = auth.currentUser;
+  if (user && (user.uid === msg.uid || user.uid === adminUID)) {
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Удалить';
+    delBtn.style.marginLeft = "10px";
+    delBtn.onclick = () => {
+      if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
+    };
+    div.appendChild(delBtn);
+
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Редактировать';
+    editBtn.style.marginLeft = "5px";
+    editBtn.onclick = () => {
+      const newText = prompt('Редактируйте сообщение:', msg.text);
+      if (newText !== null) db.ref('messages/' + key).update({ text: newText });
+    };
+    div.appendChild(editBtn);
+  }
+
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Обновление сообщения
+function updateMessage(snapshot) {
+  const msg = snapshot.val();
+  const key = snapshot.key;
+  const div = messagesDiv.querySelector(`.message-item[data-key='${key}']`);
+  if (div) div.querySelector('.msg-text').textContent = msg.text;
+}
+
+// Удаление сообщения
+function removeMessage(snapshot) {
+  const key = snapshot.key;
+  const div = messagesDiv.querySelector(`.message-item[data-key='${key}']`);
+  if (div) div.remove();
+}
+
+// Подписка на авторизацию
+auth.onAuthStateChanged(user => {
+  if (user) {
+    authSection.style.display = 'none';
+    chatSection.style.display = 'block';
+    loadMessages();
+  } else {
+    authSection.style.display = 'block';
+    chatSection.style.display = 'none';
+  }
+});
+
+  </script>
+</body>
+</html>
