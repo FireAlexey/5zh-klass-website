@@ -128,6 +128,118 @@ body.dark {
         font-size: 14px;
       }
     }
+
+    /* 📱 Адаптация под телефоны */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+
+  .container {
+    width: 95%;
+    margin: 10px auto;
+    padding: 10px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  input, button {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  #messages {
+    max-height: 250px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  /* === СТРОКА ВВОДА В СТИЛЕ TELEGRAM === */
+
+.input-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  background: var(--card);
+  padding: 10px;
+  border-radius: 12px;
+}
+
+#messageInput {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#sendBtn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--button);
+  font-size: 20px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+#sendBtn:hover {
+  background: var(--button-hover);
+}
+
+/* 📱 Телефонная версия */
+@media (max-width: 600px) {
+  .input-area {
+    padding: 8px;
+  }
+  #messageInput {
+    font-size: 14px;
+    padding: 10px;
+  }
+  #sendBtn {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+}
+
+  /* Картинки в сообщениях */
+  .message-item img {
+    max-width: 100%;
+    border-radius: 6px;
+  }
+
+  /* Кнопка темы поменьше */
+  #themeToggle {
+    font-size: 20px;
+    top: 6px;
+    right: 6px;
+  }
+}
+
+/* 📱 Очень маленькие экраны (типа старых телефонов) */
+@media (max-width: 400px) {
+
+  input, button {
+    font-size: 13px;
+    padding: 7px;
+  }
+
+  #messages {
+    max-height: 220px;
+  }
+}
   </style>
 </head>
 <body>
@@ -148,14 +260,14 @@ body.dark {
 <div id="chatSection" style="display:none;">
   <div id="messages"></div>
 
-  <input type="text" id="messageInput" placeholder="Введите сообщение">
-
-  <!-- Поле для ссылки на изображение -->
-  <input type="text" id="imageInput" placeholder="Ссылка на изображение / GIF (необязательно)">
-
+  <div class="input-area">
+  <input type="text" id="messageInput" placeholder="Сообщение...">
+    <input type="text" id="imageInput" placeholder="Ссылка на изображение / GIF (необязательно)">
   <button id="sendBtn">Отправить</button>
   <button id="logout">Выход</button>
 </div>
+</div>
+
 
 
     <div class="top-link">
