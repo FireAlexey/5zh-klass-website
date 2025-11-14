@@ -145,13 +145,18 @@ body.dark {
     </div>
 
     <!-- Чат -->
-    <div id="chatSection" style="display:none;">
-      <div id="messages"></div>
-      <input type="file" id="imageInput" accept="image/*,image/gif">
-      <input type="text" id="messageInput" placeholder="Введите сообщение">
-      <button id="sendBtn">Отправить</button>
-      <button id="logout">Выход</button>
-    </div>
+<div id="chatSection" style="display:none;">
+  <div id="messages"></div>
+
+  <input type="text" id="messageInput" placeholder="Введите сообщение">
+
+  <!-- Поле для ссылки на изображение -->
+  <input type="text" id="imageInput" placeholder="Ссылка на изображение / GIF (необязательно)">
+
+  <button id="sendBtn">Отправить</button>
+  <button id="logout">Выход</button>
+</div>
+
 
     <div class="top-link">
       <a href="index.html">← На главную</a>
@@ -252,40 +257,27 @@ function logout() {
 
 async function sendMessage() {
   const text = messageInput.value.trim();
-  const fileInput = document.getElementById('imageInput');
-  const file = fileInput.files[0];
+  const imageURL = document.getElementById("imageInput").value.trim();
 
-  if (!text && !file) return; // Не отправлять пустое сообщение
+  if (!text && !imageURL)
+    return alert("Введите сообщение или ссылку на изображение!");
 
   const user = auth.currentUser;
   const snapshot = await db.ref('users/' + user.uid).once('value');
   const nickname = snapshot.val()?.nickname || 'Аноним';
 
-  let imageUrl = null;
-
-  if (file) {
-    try {
-      const storageRef = firebase.storage().ref();
-      const fileRef = storageRef.child('chat_images/' + Date.now() + '_' + file.name);
-      await fileRef.put(file);
-      imageUrl = await fileRef.getDownloadURL();
-    } catch (err) {
-      alert('Ошибка загрузки файла: ' + err.message);
-      return;
-    }
-  }
-
-  await db.ref('messages').push({
+  db.ref('messages').push({
     user: nickname,
-    uid: user.uid,
-    text: text || '',
-    image: imageUrl || null,
+    uid: auth.currentUser.uid,
+    text: text || null,
+    image: imageURL || null,
     timestamp: Date.now()
   });
 
-  messageInput.value = '';
-  fileInput.value = '';
+  messageInput.value = "";
+  document.getElementById("imageInput").value = "";
 }
+
 
 
 
