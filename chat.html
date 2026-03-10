@@ -312,11 +312,7 @@ logoutBtn.onclick = logout;
 sendBtn.onclick = sendMessage;
 
 const themeToggle = document.getElementById('themeToggle');
-const adminUIDs = [
-  "GwfM0H0vkgOJdpbrbJHjkrFUC0k2", 
-  "nDwsroVFFDPPEvEAYMwlynzUK5C3",
-  "dcw5baFCxvWIZBAqcMUbLwTN0mh1"
- ]; // <- поставь UID админа, если нужно
+const adminUIDs = "GwfM0H0vkgOJdpbrbJHjkrFUC0k2"; // <- поставь UID админа, если нужно
 
 // Тема
 function setTheme(isDark) {
@@ -483,4 +479,5 @@ auth.onAuthStateChanged(user => {
   </script>
 </body>
 </html>
+
 
