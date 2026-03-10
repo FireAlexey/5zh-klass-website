@@ -464,77 +464,31 @@ function removeMessage(snapshot) {
   if (div) div.remove();
 }
 
-// Подписка на авторизацию и проверка админа
 auth.onAuthStateChanged(user => {
-  if(user){
-    // Проверяем в базе, админ ли пользователь
+  if (user) {
+    authSection.style.display = 'none';
+    chatSection.style.display = 'block';
+    loadMessages(); // загружаем чат сразу
+
+    // Проверка админа отдельно
     db.ref("admins/" + user.uid).once("value").then(snap => {
-      if(snap.exists() && snap.val() === true){
+      if (snap.exists() && snap.val() === true) {
         isAdmin = true;
         console.log("Вы админ");
       }
     });
-  }
 
-  if (user) {
-    authSection.style.display = 'none';
-    chatSection.style.display = 'block';
-    loadMessages();
   } else {
     authSection.style.display = 'block';
     chatSection.style.display = 'none';
+    isAdmin = false; // сбрасываем, если вышли
   }
-});
-
-// В функции addMessage заменяем условие с adminUID на isAdmin
-function addMessage(snapshot) {
-  const msg = snapshot.val();
-  const key = snapshot.key;
-  const div = document.createElement('div');
-  div.className = 'message-item';
-  div.dataset.key = key;
-  const time = new Date(msg.timestamp).toLocaleTimeString();
-
-  div.innerHTML = `<strong>[${time}] ${msg.user}:</strong> <span class="msg-text">${msg.text || ''}</span>`;
-
-  if (msg.image) {
-    const img = document.createElement('img');
-    img.src = msg.image;
-    img.className = 'message-img';
-    img.style.maxWidth = '200px';
-    img.style.display = 'block';
-    img.style.marginTop = '5px';
-    div.appendChild(img);
-  }
-
-  const user = auth.currentUser;
-  if (user && (user.uid === msg.uid || isAdmin)) { // <-- тут используется isAdmin
-    const delBtn = document.createElement('button');
-    delBtn.textContent = 'Удалить';
-    delBtn.style.marginLeft = "10px";
-    delBtn.onclick = () => {
-      if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
-    };
-    div.appendChild(delBtn);
-
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Редактировать';
-    editBtn.style.marginLeft = "5px";
-    editBtn.onclick = () => {
-      const newText = prompt('Редактируйте сообщение:', msg.text);
-      if (newText !== null) db.ref('messages/' + key).update({ text: newText });
-    };
-    div.appendChild(editBtn);
-  }
-
-  messagesDiv.appendChild(div);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
 });
 
   </script>
 </body>
 </html>
+
 
 
 
