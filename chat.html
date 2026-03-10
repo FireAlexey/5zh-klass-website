@@ -281,6 +281,7 @@ body.dark {
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
 
   <script>
+    let isAdmin = false;
     const firebaseConfig = {
   apiKey: "AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
   authDomain: "klass-fda45.firebaseapp.com",
@@ -312,7 +313,6 @@ logoutBtn.onclick = logout;
 sendBtn.onclick = sendMessage;
 
 const themeToggle = document.getElementById('themeToggle');
-const adminUIDs = "GwfM0H0vkgOJdpbrbJHjkrFUC0k2"; // <- поставь UID админа, если нужно
 
 // Тема
 function setTheme(isDark) {
@@ -466,6 +466,14 @@ function removeMessage(snapshot) {
 
 // Подписка на авторизацию
 auth.onAuthStateChanged(user => {
+  if(user){
+  db.ref("admins/" + user.uid).once("value").then(snap => {
+    if(snap.exists()){
+      isAdmin = true;
+      console.log("Вы админ");
+    }
+  });
+}
   if (user) {
     authSection.style.display = 'none';
     chatSection.style.display = 'block';
@@ -479,5 +487,6 @@ auth.onAuthStateChanged(user => {
   </script>
 </body>
 </html>
+
 
 
