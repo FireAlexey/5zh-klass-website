@@ -403,7 +403,6 @@ function loadMessages() {
   db.ref('messages').on('child_removed', snapshot => removeMessage(snapshot));
 }
 
-// Добавление нового сообщения
 function addMessage(snapshot) {
   const msg = snapshot.val();
   const key = snapshot.key;
@@ -415,13 +414,41 @@ function addMessage(snapshot) {
   div.innerHTML = `<strong>[${time}] ${msg.user}:</strong> <span class="msg-text">${msg.text || ''}</span>`;
 
   if (msg.image) {
-  const img = document.createElement('img');
-  img.src = msg.image;
-  img.className = 'message-img';
-  img.style.maxWidth = '200px';
-  img.style.display = 'block';
-  img.style.marginTop = '5px';
-  div.appendChild(img);
+    const img = document.createElement('img');
+    img.src = msg.image;
+    img.className = 'message-img';
+    img.style.maxWidth = '200px';
+    img.style.display = 'block';
+    img.style.marginTop = '5px';
+    div.appendChild(img);
+  }
+
+  const user = auth.currentUser;
+  // Кнопки только если админ или автор сообщения
+  if (user && (user.uid === msg.uid || isAdmin)) {
+    // Удаление
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Удалить';
+    delBtn.style.marginLeft = "10px";
+    delBtn.onclick = () => {
+      if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
+    };
+    div.appendChild(delBtn);
+
+    // Редактирование
+    const editBtn = document.createElement('button');
+    editBtn.textContent = 'Редактировать';
+    editBtn.style.marginLeft = "5px";
+    editBtn.onclick = () => {
+      const newText = prompt('Редактируйте сообщение:', msg.text);
+      if (newText !== null) db.ref('messages/' + key).update({ text: newText });
+    };
+    div.appendChild(editBtn);
+  }
+
+  // Сообщение добавляем всегда, кнопки — по условию
+  messagesDiv.appendChild(div);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
 
@@ -488,6 +515,7 @@ auth.onAuthStateChanged(user => {
   </script>
 </body>
 </html>
+
 
 
 
