@@ -294,27 +294,28 @@
       if (div) div.remove();
     }
 
-    // Подписка на авторизацию с правильной проверкой админа
     auth.onAuthStateChanged(user => {
-      if (user) {
-        authSection.style.display = 'none';
-        chatSection.style.display = 'block';
-        loadMessages(); // чат грузим сразу
+  if (user) {
+    authSection.style.display = 'none';
+    chatSection.style.display = 'block';
 
-        // асинхронная проверка админа
-        db.ref("admins/" + user.uid).once("value").then(snap => {
-          if (snap.exists() && snap.val() === true) {
-            isAdmin = true;
-            console.log("Вы админ");
-          }
-        });
-
-      } else {
-        authSection.style.display = 'block';
-        chatSection.style.display = 'none';
-        isAdmin = false; // сбрасываем
+    // проверяем админа
+    db.ref("admins/" + user.uid).once("value").then(snap => {
+      if (snap.exists() && snap.val() === true) {
+        isAdmin = true;
+        console.log("Вы админ");
       }
+      // Загружаем чат только после проверки админа
+      loadMessages();
     });
+
+  } else {
+    authSection.style.display = 'block';
+    chatSection.style.display = 'none';
+    isAdmin = false;
+  }
+});
   </script>
 </body>
 </html>
+
