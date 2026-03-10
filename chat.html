@@ -294,19 +294,44 @@
       if (div) div.remove();
     }
 
-    auth.onAuthStateChanged(user => {
+   auth.onAuthStateChanged(user => {
   if (user) {
     authSection.style.display = 'none';
     chatSection.style.display = 'block';
 
-    // проверяем админа
+    loadMessages(); // чат грузим сразу
+
+    // Проверка админа
     db.ref("admins/" + user.uid).once("value").then(snap => {
       if (snap.exists() && snap.val() === true) {
         isAdmin = true;
         console.log("Вы админ");
+
+        // После того как узнали, что админ — обновляем кнопки у уже существующих сообщений
+        document.querySelectorAll('.message-item').forEach(div => {
+          const msgUid = div.dataset.uid; // нужно чтобы при addMessage dataset.uid = msg.uid
+          if (msgUid && msgUid !== user.uid) {
+            const key = div.dataset.key;
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Удалить';
+            delBtn.style.marginLeft = "10px";
+            delBtn.onclick = () => {
+              if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
+            };
+            div.appendChild(delBtn);
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Редактировать';
+            editBtn.style.marginLeft = "5px";
+            editBtn.onclick = () => {
+              const msgText = div.querySelector('.msg-text').textContent;
+              const newText = prompt('Редактируйте сообщение:', msgText);
+              if (newText !== null) db.ref('messages/' + key).update({ text: newText });
+            };
+            div.appendChild(editBtn);
+          }
+        });
       }
-      // Загружаем чат только после проверки админа
-      loadMessages();
     });
 
   } else {
@@ -318,4 +343,5 @@
   </script>
 </body>
 </html>
+
 
