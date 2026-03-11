@@ -1,347 +1,366 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
-  <meta charset="UTF-8">
-  <title>Чат 5 "Ж" класса</title>
-  <style>
-    /* ВСЕ ТВОИ СТИЛИ ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ */
-    :root {
-      --bg: #f0f0f0;
-      --text: #000;
-      --card: #fff;
-      --button: #3498db;
-      --button-hover: #2d85c6;
-    }
-    body.dark {
-      --bg: #1e1e1e;
-      --text: #f0f0f0;
-      --card: #2c2c2c;
-      --button: #5555ff;
-      --button-hover: #4444dd;
-    }
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .container {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 15px;
-      background: var(--card);
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      transition: background 0.3s, color 0.3s;
-    }
-    h2 { text-align: center; color: #2c3e50; transition: color 0.3s; }
-    body.dark h2 { color: var(--text); }
-    input, button {
-      padding: 10px;
-      margin: 5px 0;
-      font-size: 16px;
-      width: 100%;
-      box-sizing: border-box;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: var(--button);
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    button:hover { background-color: var(--button-hover); }
-    #messages {
-      max-height: 300px;
-      overflow-y: auto;
-      margin: 15px 0;
-      padding: 10px;
-      background-color: #ecf0f1;
-      border-radius: 5px;
-      transition: background-color 0.3s;
-    }
-    body.dark #messages { background-color: #3a3a3a; }
-    #logout { background-color: #e74c3c; }
-    #logout:hover { background-color: #c0392b; }
-    .top-link { text-align: center; margin-top: 15px; }
-    .top-link a { color: var(--button); text-decoration: none; }
-    #themeToggle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-size: 24px;
-    }
-    /* … и остальные твои стили … */
-  </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Чат 5 "Ж"</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+
+<style>
+
+:root{
+--bg:#f0f0f0;
+--text:#000;
+--card:#ffffff;
+--button:#3498db;
+}
+
+body.dark{
+--bg:#1e1e1e;
+--text:#eee;
+--card:#2c2c2c;
+--button:#5555ff;
+}
+
+body{
+margin:0;
+font-family:Segoe UI;
+background:var(--bg);
+color:var(--text);
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+header{
+padding:12px;
+background:var(--card);
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+#messages{
+flex:1;
+overflow-y:auto;
+padding:10px;
+display:flex;
+flex-direction:column;
+gap:6px;
+}
+
+.message{
+background:var(--card);
+padding:8px 12px;
+border-radius:12px;
+max-width:80%;
+}
+
+.message strong{
+font-size:14px;
+}
+
+.message img{
+max-width:200px;
+border-radius:8px;
+margin-top:5px;
+}
+
+.time{
+font-size:11px;
+opacity:0.6;
+margin-left:5px;
+}
+
+.actions{
+margin-top:5px;
+}
+
+.actions button{
+font-size:12px;
+margin-right:5px;
+}
+
+.input-area{
+display:flex;
+padding:10px;
+background:var(--card);
+gap:5px;
+}
+
+#messageInput{
+flex:1;
+padding:10px;
+border-radius:20px;
+border:1px solid #ccc;
+}
+
+#sendBtn{
+width:45px;
+height:45px;
+border-radius:50%;
+border:none;
+background:var(--button);
+color:white;
+font-size:18px;
+cursor:pointer;
+}
+
+#imageInput{
+display:none;
+}
+
+#authSection{
+padding:20px;
+}
+
+input{
+padding:10px;
+margin-bottom:10px;
+width:100%;
+box-sizing:border-box;
+}
+
+button{
+padding:10px;
+border:none;
+background:var(--button);
+color:white;
+cursor:pointer;
+border-radius:6px;
+}
+
+#themeToggle{
+font-size:20px;
+background:none;
+border:none;
+cursor:pointer;
+}
+
+</style>
+
 </head>
+
 <body>
-  <button id="themeToggle">☀️</button>
-  <div class="container">
-    <h2>Чат 5 "Ж" класса</h2>
 
-    <!-- Авторизация -->
-    <div id="authSection">
-      <input type="text" id="nickname" placeholder="Никнейм">
-      <input type="password" id="password" placeholder="Пароль">
-      <button id="registerBtn">Регистрация</button>
-      <p id="registerSuccess" style="color:green; display:none;">Регистрация прошла успешно! Теперь выполните вход.</p>
-      <button id="loginBtn">Вход</button>
-    </div>
+<header>
+<span>Чат 5 "Ж"</span>
+<div>
+<button id="themeToggle">☀️</button>
+<a href="index.html">🏠</a>
+</div>
+</header>
 
-    <!-- Чат -->
-    <div id="chatSection" style="display:none;">
-      <div id="messages"></div>
+<div id="authSection">
 
-      <div class="input-area">
-        <input type="text" id="messageInput" placeholder="Сообщение...">
-        <input type="text" id="imageInput" placeholder="Ссылка на изображение / GIF (необязательно)">
-        <button id="sendBtn">Отправить</button>
-        <button id="logout">Выход</button>
-      </div>
-    </div>
+<input id="nickname" placeholder="Никнейм">
+<input id="password" type="password" placeholder="Пароль">
 
-    <div class="top-link">
-      <a href="index.html">← На главную</a>
-    </div>
-  </div>
+<button id="registerBtn">Регистрация</button>
+<button id="loginBtn">Вход</button>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+</div>
 
-  <script>
-    let isAdmin = false;
+<div id="messages" style="display:none"></div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
-      authDomain: "klass-fda45.firebaseapp.com",
-      databaseURL: "https://klass-fda45-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "klass-fda45",
-      storageBucket: "klass-fda45.appspot.com",
-      messagingSenderId: "1063291699872",
-      appId: "1:1063291699872:web:e01c9c9a984b3d63733fc5",
-      measurementId: "G-VBYZLXZ4BW"
-    };
+<div class="input-area" id="chatControls" style="display:none">
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+<input id="messageInput" placeholder="Сообщение...">
+<input id="imageInput" placeholder="Ссылка на GIF или фото">
 
-    const authSection = document.getElementById('authSection');
-    const chatSection = document.getElementById('chatSection');
-    const messagesDiv = document.getElementById('messages');
-    const messageInput = document.getElementById('messageInput');
+<button id="sendBtn">➤</button>
 
-    const registerBtn = document.getElementById('registerBtn');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logout');
-    const sendBtn = document.getElementById('sendBtn');
+</div>
 
-    registerBtn.onclick = register;
-    loginBtn.onclick = login;
-    logoutBtn.onclick = logout;
-    sendBtn.onclick = sendMessage;
+<script>
 
-    const themeToggle = document.getElementById('themeToggle');
+let isAdmin=false
 
-    // Тема
-    function setTheme(isDark) {
-      if(isDark) {
-        document.body.classList.add('dark');
-        themeToggle.textContent = '🌙';
-      } else {
-        document.body.classList.remove('dark');
-        themeToggle.textContent = '☀️';
-      }
-    }
+const firebaseConfig={
+apiKey:"AIzaSyDlRb8b_XOOOiEtU_M1YhrA9R3Wl8iF5xs",
+authDomain:"klass-fda45.firebaseapp.com",
+databaseURL:"https://klass-fda45-default-rtdb.europe-west1.firebasedatabase.app",
+projectId:"klass-fda45",
+storageBucket:"klass-fda45.appspot.com",
+messagingSenderId:"1063291699872",
+appId:"1:1063291699872:web:e01c9c9a984b3d63733fc5"
+}
 
-    themeToggle.onclick = () => {
-      const isDark = !document.body.classList.contains('dark');
-      setTheme(isDark);
-      localStorage.setItem('darkMode', isDark);
-    };
+firebase.initializeApp(firebaseConfig)
 
-    window.onload = () => {
-      const isDark = localStorage.getItem('darkMode') === 'true';
-      setTheme(isDark);
-    };
+const auth=firebase.auth()
+const db=firebase.database()
 
-    // Регистрация
-    async function register() {
-      const nickname = document.getElementById('nickname').value.trim();
-      const password = document.getElementById('password').value.trim();
-      if (!nickname || !password) return alert("Введите ник и пароль");
-      try {
-        const userCredential = await auth.createUserWithEmailAndPassword(nickname + "@chat.local", password);
-        await db.ref('users/' + userCredential.user.uid).set({ nickname });
-        document.getElementById('registerSuccess').style.display = 'block';
-      } catch (error) {
-        alert("Ошибка регистрации: " + error.message);
-      }
-    }
+const authSection=document.getElementById("authSection")
+const messages=document.getElementById("messages")
+const messageInput=document.getElementById("messageInput")
 
-    // Вход
-    async function login() {
-      const nickname = document.getElementById('nickname').value.trim();
-      const password = document.getElementById('password').value.trim();
-      if (!nickname || !password) return alert("Введите ник и пароль");
-      try {
-        await auth.signInWithEmailAndPassword(nickname + "@chat.local", password);
-      } catch (error) {
-        alert("Ошибка входа: " + error.message);
-      }
-    }
+document.getElementById("registerBtn").onclick=register
+document.getElementById("loginBtn").onclick=login
+document.getElementById("sendBtn").onclick=sendMessage
 
-    // Выход
-    function logout() {
-      auth.signOut();
-    }
+const themeToggle=document.getElementById("themeToggle")
 
-    async function sendMessage() {
-      const text = messageInput.value.trim();
-      const imageURL = document.getElementById("imageInput").value.trim();
+function setTheme(dark){
+if(dark){
+document.body.classList.add("dark")
+themeToggle.textContent="🌙"
+}else{
+document.body.classList.remove("dark")
+themeToggle.textContent="☀️"
+}
+}
 
-      if (!text && !imageURL) return alert("Введите сообщение или ссылку на изображение!");
+themeToggle.onclick=()=>{
+const dark=!document.body.classList.contains("dark")
+setTheme(dark)
+localStorage.setItem("darkMode",dark)
+}
 
-      const user = auth.currentUser;
-      const snapshot = await db.ref('users/' + user.uid).once('value');
-      const nickname = snapshot.val()?.nickname || 'Аноним';
+window.onload=()=>{
+setTheme(localStorage.getItem("darkMode")==="true")
+}
 
-      db.ref('messages').push({
-        user: nickname,
-        uid: auth.currentUser.uid,
-        text: text || null,
-        image: imageURL || null,
-        timestamp: Date.now()
-      });
+async function register(){
 
-      messageInput.value = "";
-      document.getElementById("imageInput").value = "";
-    }
+const nick=nickname.value.trim()
+const pass=password.value.trim()
 
-    // Загрузка сообщений
-    function loadMessages() {
-      messagesDiv.innerHTML = '';
-      db.ref('messages').on('child_added', snapshot => addMessage(snapshot));
-      db.ref('messages').on('child_changed', snapshot => updateMessage(snapshot));
-      db.ref('messages').on('child_removed', snapshot => removeMessage(snapshot));
-    }
+if(!nick||!pass)return alert("Введите данные")
 
-    // Добавление сообщения
-    function addMessage(snapshot) {
-      const msg = snapshot.val();
-      const key = snapshot.key;
-      const div = document.createElement('div');
-      div.className = 'message-item';
-      div.dataset.key = key;
-      const time = new Date(msg.timestamp).toLocaleTimeString();
+const user=await auth.createUserWithEmailAndPassword(nick+"@chat.local",pass)
 
-      div.innerHTML = `<strong>[${time}] ${msg.user}:</strong> <span class="msg-text">${msg.text || ''}</span>`;
+await db.ref("users/"+user.user.uid).set({
+nickname:nick
+})
 
-      if (msg.image) {
-        const img = document.createElement('img');
-        img.src = msg.image;
-        img.className = 'message-img';
-        img.style.maxWidth = '200px';
-        img.style.display = 'block';
-        img.style.marginTop = '5px';
-        div.appendChild(img);
-      }
+alert("Регистрация успешна")
 
-      const user = auth.currentUser;
-      if (user && (user.uid === msg.uid || isAdmin)) { // <-- только админ или автор
-        const delBtn = document.createElement('button');
-        delBtn.textContent = 'Удалить';
-        delBtn.style.marginLeft = "10px";
-        delBtn.onclick = () => {
-          if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
-        };
-        div.appendChild(delBtn);
+}
 
-        const editBtn = document.createElement('button');
-        editBtn.textContent = 'Редактировать';
-        editBtn.style.marginLeft = "5px";
-        editBtn.onclick = () => {
-          const newText = prompt('Редактируйте сообщение:', msg.text);
-          if (newText !== null) db.ref('messages/' + key).update({ text: newText });
-        };
-        div.appendChild(editBtn);
-      }
+async function login(){
 
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+const nick=nickname.value.trim()
+const pass=password.value.trim()
 
-    function updateMessage(snapshot) {
-      const msg = snapshot.val();
-      const key = snapshot.key;
-      const div = messagesDiv.querySelector(`.message-item[data-key='${key}']`);
-      if (div) div.querySelector('.msg-text').textContent = msg.text;
-    }
+await auth.signInWithEmailAndPassword(nick+"@chat.local",pass)
 
-    function removeMessage(snapshot) {
-      const key = snapshot.key;
-      const div = messagesDiv.querySelector(`.message-item[data-key='${key}']`);
-      if (div) div.remove();
-    }
+}
 
-   auth.onAuthStateChanged(user => {
-  if (user) {
-    authSection.style.display = 'none';
-    chatSection.style.display = 'block';
+function sendMessage(){
 
-    loadMessages(); // чат грузим сразу
+const text=messageInput.value.trim()
 
-    // Проверка админа
-    db.ref("admins/" + user.uid).once("value").then(snap => {
-      if (snap.exists() && snap.val() === true) {
-        isAdmin = true;
-        console.log("Вы админ");
+if(!text)return
 
-        // После того как узнали, что админ — обновляем кнопки у уже существующих сообщений
-        document.querySelectorAll('.message-item').forEach(div => {
-          const msgUid = div.dataset.uid; // нужно чтобы при addMessage dataset.uid = msg.uid
-          if (msgUid && msgUid !== user.uid) {
-            const key = div.dataset.key;
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Удалить';
-            delBtn.style.marginLeft = "10px";
-            delBtn.onclick = () => {
-              if (confirm('Удалить это сообщение?')) db.ref('messages/' + key).remove();
-            };
-            div.appendChild(delBtn);
+const user=auth.currentUser
 
-            const editBtn = document.createElement('button');
-            editBtn.textContent = 'Редактировать';
-            editBtn.style.marginLeft = "5px";
-            editBtn.onclick = () => {
-              const msgText = div.querySelector('.msg-text').textContent;
-              const newText = prompt('Редактируйте сообщение:', msgText);
-              if (newText !== null) db.ref('messages/' + key).update({ text: newText });
-            };
-            div.appendChild(editBtn);
-          }
-        });
-      }
-    });
+db.ref("users/"+user.uid).once("value").then(s=>{
 
-  } else {
-    authSection.style.display = 'block';
-    chatSection.style.display = 'none';
-    isAdmin = false;
-  }
-});
-  </script>
+const nick=s.val()?.nickname||"Аноним"
+
+db.ref("messages").push({
+user:nick,
+uid:user.uid,
+text:text,
+timestamp:Date.now()
+})
+
+})
+
+messageInput.value=""
+
+}
+
+function addMessage(snapshot){
+
+const msg=snapshot.val()
+const key=snapshot.key
+
+const div=document.createElement("div")
+div.className="message"
+div.dataset.key=key
+
+const time=new Date(msg.timestamp).toLocaleTimeString()
+
+div.innerHTML="<strong>"+msg.user+"</strong><span class='time'>"+time+"</span><br>"+(msg.text||"")
+
+if(msg.image){
+
+const img=document.createElement("img")
+img.src=msg.image
+div.appendChild(img)
+
+}
+
+const user=auth.currentUser
+
+if(user&&(user.uid===msg.uid||isAdmin)){
+
+const actions=document.createElement("div")
+actions.className="actions"
+
+const del=document.createElement("button")
+del.textContent="🗑"
+
+del.onclick=()=>{
+db.ref("messages/"+key).remove()
+}
+
+const edit=document.createElement("button")
+edit.textContent="✏️"
+
+edit.onclick=()=>{
+const t=prompt("Редактировать",msg.text)
+if(t!==null){
+db.ref("messages/"+key).update({text:t})
+}
+}
+
+actions.appendChild(edit)
+actions.appendChild(del)
+
+div.appendChild(actions)
+
+}
+
+messages.appendChild(div)
+
+messages.scrollTop=messages.scrollHeight
+
+}
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+authSection.style.display="none"
+messages.style.display="flex"
+document.getElementById("chatControls").style.display="flex"
+
+db.ref("admins/"+user.uid).once("value").then(s=>{
+if(s.exists())isAdmin=true
+})
+
+db.ref("messages").on("child_added",addMessage)
+
+}else{
+
+authSection.style.display="block"
+messages.style.display="none"
+document.getElementById("chatControls").style.display="none"
+
+}
+
+})
+
+</script>
+
 </body>
 </html>
-
-
