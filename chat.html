@@ -301,7 +301,7 @@ div.appendChild(img)
 
 const user=auth.currentUser
 
-if(user&&(user.uid===msg.uid||isAdmin)){
+if(user && user.uid === msg.uid){
 
 const actions=document.createElement("div")
 actions.className="actions"
@@ -317,10 +317,15 @@ const edit=document.createElement("button")
 edit.textContent="✏️"
 
 edit.onclick=()=>{
-const t=prompt("Редактировать",msg.text)
-if(t!==null){
-db.ref("messages/"+key).update({text:t})
-}
+
+const t=prompt("Редактировать сообщение",msg.text)
+
+if(t===null)return
+
+db.ref("messages/"+key).update({
+text:t
+})
+
 }
 
 actions.appendChild(edit)
@@ -364,3 +369,4 @@ document.getElementById("chatControls").style.display="none"
 
 </body>
 </html>
+
