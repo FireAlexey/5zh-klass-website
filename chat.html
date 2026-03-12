@@ -116,6 +116,7 @@ flex:1;
 padding:10px;
 border-radius:20px;
 border:1px solid #ccc;
+font-size:16px;  
 }
 
 #sendBtn{
@@ -253,7 +254,7 @@ async function login(){
 const nick=nickname.value.trim()
 const pass=password.value.trim()
 
-await auth.signInWithEmailAndPassword(nick+"@chat.local",pass)
+await auth.signInWithEmailAndPassword(nick+"@chat.local",pass) //наверное потом привязку почты добавлю
 
 }
 
@@ -315,6 +316,7 @@ db.ref("messages/"+key).remove()
 const edit=document.createElement("button")
 edit.textContent="Редактировать"
 
+if(user.uid !== msg.uid) edit.remove()  
 if(user.uid !== msg.uid) edit.style.display="none"  
 
 edit.onclick=()=>{
@@ -388,4 +390,5 @@ document.getElementById("chatControls").style.display="none"
 
 </body>
 </html>
+
 
