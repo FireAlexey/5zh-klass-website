@@ -315,6 +315,8 @@ db.ref("messages/"+key).remove()
 const edit=document.createElement("button")
 edit.textContent="Редактировать"
 
+if(user.uid !== msg.uid) edit.style.display="none"  
+
 edit.onclick=()=>{
 const t=prompt("Редактировать сообщение",msg.text)
 if(t===null)return
@@ -386,3 +388,4 @@ document.getElementById("chatControls").style.display="none"
 
 </body>
 </html>
+
